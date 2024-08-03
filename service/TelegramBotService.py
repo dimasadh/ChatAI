@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from common import GlobalValue
 from service.IChatAIService import IChatAIHandler
 from service.ClaudeAIService import ClaudeAIService
+from service.ChatGPTAIService import ChatGPTAIService
 
 load_dotenv()
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -15,10 +16,12 @@ class TelegramBotService:
     that can interact with the chosen AI.
     """
     _claude_service: ClaudeAIService = None
+    _chat_gpt_service: ChatGPTAIService = None
     _chat_ai_service: IChatAIHandler = None
 
     def __init__(self) -> None:
         self._claude_service = ClaudeAIService()
+        self._chat_gpt_service = ChatGPTAIService()
 
     def run(self):
         application = ApplicationBuilder().token(GlobalValue.TELEGRAM_BOT_API_KEY).build()
@@ -32,8 +35,8 @@ class TelegramBotService:
     async def handle_message(self, update: Update, context: CallbackContext):
         user_message = update.message.text
         # claude_response = await call_claude_api(user_message)
-        self._set_chat_ai_service(self._claude_service)
-        message_response = await self._claude_service.get_response(user_message)
+        self._set_chat_ai_service(self._chat_gpt_service)
+        message_response = await self._chat_ai_service.get_response(user_message)
         await context.bot.send_message(chat_id=update.effective_chat.id, text=message_response)
         
     def _set_chat_ai_service(self, service: IChatAIHandler):
