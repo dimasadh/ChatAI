@@ -11,5 +11,5 @@ class IChatAIHandler(ABC):
                 NotImplemented)
 
     @abstractmethod
-    def get_response(self, message: str) -> str:
+    def get_response(self, user_id: str, message: str) -> str:
         raise NotImplementedError

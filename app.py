@@ -1,16 +1,16 @@
-from service.TelegramBotService import TelegramBotService
+from services.TelegramBotService import TelegramBotService
 
 def main():
     telegram_bot_service = TelegramBotService()
     telegram_bot_service.run()
 
 def runChatGPTPlayground():
-    from service.ChatGPTAIService import ChatGPTAIService
+    from services.chat_ai.ChatGPTAIService import ChatGPTAIService
     chat_gpt_service = ChatGPTAIService()
     chat_gpt_service.run()
 
 def runClaudePlayground():
-    from service.ClaudeAIService import ClaudeAIService
+    from services.chat_ai.ClaudeAIService import ClaudeAIService
     claude_service = ClaudeAIService()
     claude_service.run()
 

@@ -3,9 +3,9 @@ from telegram import Update
 from telegram.ext import CommandHandler, MessageHandler, CallbackContext, filters, ApplicationBuilder
 from dotenv import load_dotenv
 from common import GlobalValue
-from service.IChatAIService import IChatAIHandler
-from service.ClaudeAIService import ClaudeAIService
-from service.ChatGPTAIService import ChatGPTAIService
+from services.chat_ai.IChatAIService import IChatAIHandler
+from services.chat_ai.ClaudeAIService import ClaudeAIService
+from services.chat_ai.ChatGPTAIService import ChatGPTAIService
 
 load_dotenv()
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -34,9 +34,8 @@ class TelegramBotService:
 
     async def handle_message(self, update: Update, context: CallbackContext):
         user_message = update.message.text
-        # claude_response = await call_claude_api(user_message)
-        self._set_chat_ai_service(self._chat_gpt_service)
-        message_response = await self._chat_ai_service.get_response(user_message)
+        self._set_chat_ai_service(self._claude_service)
+        message_response = await self._chat_ai_service.get_response(str(update._effective_user.id), user_message)
         await context.bot.send_message(chat_id=update.effective_chat.id, text=message_response)
         
     def _set_chat_ai_service(self, service: IChatAIHandler):
