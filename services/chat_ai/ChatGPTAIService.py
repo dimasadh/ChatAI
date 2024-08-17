@@ -3,18 +3,21 @@ from services.chat_ai.IChatAIService import IChatAIHandler
 from openai import OpenAI
 from common import GlobalValue
 from common.MessageCache import MessageCache
+from common.Enums import AI_MODEL
 
 class ChatGPTAIService(IChatAIHandler):
     __client: OpenAI = None
     __model: str = None
     _base_message = [ {"role": "system", "content":  
-                    "You are a intelligent assistant."} ] 
+                    "I'm here to listen and have a conversation with you. What do you want to ask"} ] 
     def __init__(self):
         super().__init__()
+        self.name = AI_MODEL.CHATGPT.value
         self.__client = OpenAI(api_key=GlobalValue.OPEN_AI_API_KEY)
         self.__model = "gpt-3.5-turbo"
 
-    def run(self): 
+    def run(self):
+        """ChatGPT playground using terminal"""
         user_id = 0
         total_tokens = 0
         if MessageCache.get(user_id) is None:
