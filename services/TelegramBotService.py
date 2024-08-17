@@ -57,6 +57,9 @@ class TelegramBotService:
         )
         application.add_handler(conv_handler)
 
+        # Add a handler for the message outside of the conversation
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.welcome_message))
+
         # Run the bot until the user presses Ctrl-C
         application.run_polling(allowed_updates=Update.ALL_TYPES)
 
@@ -130,6 +133,14 @@ class TelegramBotService:
         )
         return ConversationHandler.END
 
+    async def welcome_message(self, update: Update, context: CallbackContext):
+        user = update.message.from_user
+        logging.info("User %s sent a message.", user.first_name)
+        await update.message.reply_text(
+            f"Hi {user.first_name}! Thank you for using ChatAI Bot.\n\n"
+            "Here is the list of available commands:\n"
+            "/start to start an activity.",
+            reply_markup=ReplyKeyboardRemove())
         
     def _set_chat_ai_service(self, service: IChatAIHandler):
         self._chat_ai_service = service
