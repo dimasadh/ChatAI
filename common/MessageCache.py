@@ -1,4 +1,5 @@
 import threading
+from common.GlobalValue import MAX_MESSAGE_ARRAY_LENGTH
 
 class MessageCache:
     _dict = {}
@@ -31,7 +32,10 @@ class MessageCache:
     def append(cls, user_id, message, token_used):
         with cls._dict_lock:
             if user_id in cls._dict:
-                cls._dict[user_id]["message"].append(message)
+                messages = cls._dict[user_id]["message"]
+                if len(messages) >= MAX_MESSAGE_ARRAY_LENGTH:
+                    messages.pop(0)
+                messages.append(message)
                 cls._dict[user_id]["token_used"] += token_used
             else:
                 cls._dict[user_id] = {"message": [message], "token_used": token_used}
