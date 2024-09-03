@@ -20,6 +20,12 @@ class MessageCache:
         with cls._dict_lock:
             if user_id in cls._dict:
                 del cls._dict[user_id]
+    
+    @classmethod
+    def remove_message(cls, user_id):
+        with cls._dict_lock:
+            if user_id in cls._dict:
+                cls._dict[user_id]["message"] = []
 
     @classmethod
     def append(cls, user_id, message, token_used):
@@ -40,3 +46,8 @@ class MessageCache:
     def get_token_used(cls, user_id, default=0):
         with cls._dict_lock:
             return cls._dict.get(user_id, {}).get("token_used", default)
+        
+    @classmethod
+    def get_all(cls):
+        with cls._dict_lock:
+            return cls._dict
