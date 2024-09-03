@@ -7,7 +7,6 @@ from telegram.ext import (
 )
 from common import GlobalValue
 from common.Enums import Activity, ConversationState, Command, AI_MODEL
-from services.chat_ai.IChatAIService import IChatAIHandler
 from common.MessageCache import MessageCache
 from services.chat_ai.ClaudeAIService import ClaudeAIService
 from services.chat_ai.ChatGPTAIService import ChatGPTAIService
@@ -24,7 +23,6 @@ class TelegramBotService:
     """
     _claude_service: ClaudeAIService = None
     _chat_gpt_service: ChatGPTAIService = None
-    _chat_ai_service: IChatAIHandler = None
 
     def __init__(self) -> None:
         self._claude_service = ClaudeAIService()
@@ -91,28 +89,34 @@ class TelegramBotService:
         await query.answer()
         chosen_model = query.data
 
-        if chosen_ai == AI_MODEL.CHATGPT.value:
-            self._chat_ai_service = self._chat_gpt_service
-        elif chosen_ai == AI_MODEL.CLAUDE.value:
-            self._chat_ai_service = self._claude_service
-        else:
-            logging.error("Invalid AI model selected.")
-            await update.message.reply_text("Invalid AI model selected.")
-            return ConversationState.CHOOSE_AI_MODEL.value
+        if chosen_model == 'chatgpt':
+            context.user_data['chat_ai_service'] = self._chat_gpt_service
+            model_intro = "You're now chatting with ChatGPT, known for its broad knowledge and creative responses."
+        elif chosen_model == 'claude':
+            context.user_data['chat_ai_service'] = self._claude_service
+            model_intro = "You're now chatting with Claude, recognized for its analytical skills and thoughtful answers."
 
         await query.edit_message_text(f"{model_intro}\n\nHow can I assist you today? (Type /finish to end the conversation)")
 
         return ConversationState.START_CHAT.value
     
     async def handle_chat(self, update: Update, context: CallbackContext):
+        user = update.effective_user
+        chat_ai_service = self._get_context_ai_service(context)
+        if not chat_ai_service:
+            await update.message.reply_text("Please choose an AI model first.")
+            return
+
+        logging.info("User %s is chatting with %s.", user.first_name, chat_ai_service.name)
         user_message = update.message.text
         ai_response = await chat_ai_service.get_response(str(update.effective_user.id), user_message)
         await update.message.reply_text(ai_response)
     
     async def end_conversation(self, update: Update, context: CallbackContext):
-        user = update.message.from_user
-        logging.info("User %s ended the conversation with %s.", user.first_name, self._chat_ai_service.name)
         user = update.effective_user
+        chat_ai_service = self._get_context_ai_service(context)
+        logging.info("User %s ended the conversation with %s. Current token used %s", 
+                     user.first_name, chat_ai_service.name, MessageCache.get_token_used(str(update.effective_user.id)))
         await update.message.reply_text("Thank you for chatting with me. Have a great day! 👋")
         MessageCache.remove_message(str(update.effective_user.id))
         return ConversationHandler.END
@@ -138,8 +142,6 @@ class TelegramBotService:
         user = update.effective_user
         logging.info("User %s sent a message outside of a conversation.", user.first_name)
         
-    def _set_chat_ai_service(self, service: IChatAIHandler):
-        self._chat_ai_service = service
         welcome_text = (
             f"Hello {user.first_name}! 👋 Welcome to ChatAI Bot, your personal AI assistant.\n\n"
             "Here's what I can do for you:\n"
@@ -151,3 +153,5 @@ class TelegramBotService:
         
         await update.message.reply_text(welcome_text)
 
+    def _get_context_ai_service(self, context: CallbackContext):
+        return context.user_data.get('chat_ai_service')
